@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Power Reminder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f4f4; padding-top: 50px; }
+        .reminder-container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background-color: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        #gameTimeDisplay { 
+            font-size: 2rem; 
+            margin-bottom: 20px; 
+            font-weight: bold; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="reminder-container text-center">
+            <h1 class="mb-4">Game Power Reminder</h1>
+            
+            <div id="gameTimeDisplay" class="mb-4">00:00</div>
+            
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="currentMinutes" class="form-label">Current Game Minutes</label>
+                    <input 
+                        id="currentMinutes" 
+                        type="number" 
+                        class="form-control text-center" 
+                        placeholder="Enter current minutes" 
+                        min="0"
+                    >
+                    <label for="currentSeconds" class="form-label mt-2">Current Game Seconds</label>
+                    <input 
+                        id="currentSeconds" 
+                        type="number" 
+                        class="form-control text-center" 
+                        placeholder="Enter current seconds" 
+                        min="0" 
+                        max="59"
+                    >
+                </div>
+            </div>
+            
+            <button 
+                onclick="startGame()" 
+                class="btn btn-primary btn-lg w-100 mb-3"
+            >
+                Start Game Timer
+            </button>
+       
+
+            <div class="reminder-list">
+                <h4>Reminder Times</h4>
+                <ul id="reminderTimesList" class="list-group">
+                    <!-- Reminder times will be dynamically populated here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+    <audio id="sound1">
+        <source src="sigma-boy.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sound2">
+        <source src="https://www.myinstants.com/instant/sigma-boy-32341/embed" type="audio/mpeg">
+    </audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const reminderTimes = [
+            9.5, 14.5, 19.5, 24.5, 29.5,
+            34.5, 39.5, 44.5, 49.5, 54.5, 59.5
+        ];
+
+        const sound1 = document.getElementById('sound1');
+        const sound2 = document.getElementById('sound2');
+        const gameTimeDisplay = document.getElementById('gameTimeDisplay');
+        const reminderTimesList = document.getElementById('reminderTimesList');
+        let gameTime = 0;
+        let gameInterval = null;
+        let triggeredReminders = new Set();
+
+        function populateReminderTimes() {
+            reminderTimesList.innerHTML = reminderTimes.map(time => {
+                const minutes = Math.floor(time);
+                const seconds = Math.round((time % 1) * 60);
+                return `<li class="list-group-item">${minutes}:${seconds < 10 ? '0' : ''}${seconds}</li>`;
+            }).join('');
+        }
+
+        function playAlternatingSound() {
+            if (sound1.paused) {
+                sound1.play();
+            } else {
+                sound2.play();
+            }
+        }
+
+
+
+        function updateGameTime() {
+            gameTime++;
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            
+            gameTimeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            checkReminders(gameTime / 60);
+        }
+
+        function checkReminders(currentGameTime) {
+            reminderTimes.forEach((time) => {
+                if (Math.abs(currentGameTime - time) < 0.1 && !triggeredReminders.has(time)) {
+                    playAlternatingSound();
+                    triggeredReminders.add(time);
+                }
+            });
+        }
+
+        function startGame() {
+            const currentMinutesInput = document.getElementById("currentMinutes");
+            const currentSecondsInput = document.getElementById("currentSeconds");
+            
+            const currentMinutes = parseInt(currentMinutesInput.value) || 0;
+            const currentSeconds = parseInt(currentSecondsInput.value) || 0;
+
+            if (currentMinutes < 0 || currentSeconds < 0 || currentSeconds > 59) {
+                alert("Please enter valid minutes and seconds.");
+                return;
+            }
+
+            if (gameInterval) {
+                clearInterval(gameInterval);
+            }
+
+            triggeredReminders.clear();
+
+            gameTime = currentMinutes * 60 + currentSeconds;
+
+            const minutes = String(Math.floor(gameTime / 60)).padStart(2, '0');
+            const seconds = String(gameTime % 60).padStart(2, '0');
+            gameTimeDisplay.textContent = `${minutes}:${seconds}`;
+
+            gameInterval = setInterval(updateGameTime, 1000);
+        }
+
+        populateReminderTimes();
+
+
+    </script>
+</body>
+</html>
